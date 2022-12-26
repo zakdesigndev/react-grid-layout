@@ -146,10 +146,10 @@ var ReactGridLayout = /*#__PURE__*/function (_React$Component) {
         activeDrag: placeholder
       });
       var element = _this.props.innerRef.current.querySelectorAll(".react-grid-placeholder")[0];
-      if (!element) return;
       var target = _this.$children[index];
       var eleX = Number(element === null || element === void 0 ? void 0 : element.getAttribute("data-x"));
       var eleY = Number(element === null || element === void 0 ? void 0 : element.getAttribute("data-y"));
+      if (!eleX || !eleY) return;
       target.x = eleX, target.y = eleY, target.l = eleX;
       target.t = eleY;
       target.r = target.l + target.w, target.b = target.t + target.h, target.lr = target.x + target.w / 2, target.tb = target.y + target.h / 2;

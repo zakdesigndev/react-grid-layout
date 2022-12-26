@@ -345,13 +345,14 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     
     const element = this.props.innerRef.current.querySelectorAll(".react-grid-placeholder")[0];
 
-    if(!element)
-      return;
+    
 
     const target = this.$children[index];
 
     const eleX = Number(element?.getAttribute("data-x"));
     const eleY = Number(element?.getAttribute("data-y"));
+    if(!eleX || !eleY)
+      return;
     target.x = eleX,
     target.y = eleY,
     target.l = eleX;
