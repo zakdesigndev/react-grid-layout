@@ -351,7 +351,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     const eleX = Number(element?.getAttribute("data-x"));
     const eleY = Number(element?.getAttribute("data-y"));
-    if(!eleX || !eleY)
+    if(!eleX || !eleY || !target)
       return;
     target.x = eleX,
     target.y = eleY,
