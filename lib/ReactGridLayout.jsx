@@ -52,7 +52,10 @@ type State = {
   // Mirrored props
   children: ReactChildrenArray<ReactElement<any>>,
   compactType?: CompactType,
-  propsLayout?: Layout
+  propsLayout?: Layout,
+  indices: array,
+  vLines: array,
+  hLines: array
 };
 
 import type { Props, DefaultProps } from "./ReactGridLayoutPropTypes";
@@ -133,10 +136,15 @@ export default class ReactGridLayout extends React.Component<Props, State> {
     oldLayout: null,
     oldResizeItem: null,
     droppingDOMNode: null,
-    children: []
+    children: [],
+    indices: [],
+    vLines: [],
+    hLines: []
   };
 
   dragEnterCounter: number = 0;
+
+  $children = [];
 
   componentDidMount() {
     this.setState({ mounted: true });
@@ -255,6 +263,29 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       oldLayout: layout
     });
 
+    this.$children = this.props.children.map((child, i) => {
+      const $ = this.props.innerRef.current.childNodes[i];
+      const x = Number($.getAttribute("data-x"));
+      const y = Number($.getAttribute("data-y"));
+      const w = Number($.getAttribute("data-w"))//$.clientWidth;
+      const h =  Number($.getAttribute("data-h"))//$.clientHeight;
+
+      return {
+        $,
+        i,
+        x,
+        y,
+        w,
+        h,
+        l: x,
+        r: x + w,
+        t: y,
+        b: y + h,
+        lr: x + w / 2,
+        tb: y + h / 2
+      };
+    });
+
     return this.props.onDragStart(layout, l, l, null, e, node);
   };
 
@@ -266,12 +297,13 @@ export default class ReactGridLayout extends React.Component<Props, State> {
    * @param {Event} e The mousedown event
    * @param {Element} node The current dragging DOM element
    */
-  onDrag: (i: string, x: number, y: number, GridDragEvent) => void = (
-    i,
-    x,
-    y,
-    { e, node }
-  ) => {
+  onDrag: (
+    i: string,
+    x: number,
+    y: number,
+    GridDragEvent,
+    index: Number
+  ) => void = (i, x, y, { e, node }, index) => {
     const { oldDragItem } = this.state;
     let { layout } = this.state;
     const { cols, allowOverlap, preventCollision } = this.props;
@@ -310,6 +342,24 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         : compact(layout, compactType(this.props), cols),
       activeDrag: placeholder
     });
+    
+    const element = this.props.innerRef.current.querySelectorAll(".react-grid-placeholder")[0];
+
+    const target = this.$children[index];
+
+    const eleX = Number(element.getAttribute("data-x"));
+    const eleY = Number(element.getAttribute("data-y"));
+    target.x = eleX,
+    target.y = eleY,
+    target.l = eleX;
+    target.t = eleY;
+    target.r = target.l + target.w,
+    target.b = target.t + target.h,
+    target.lr =  target.x + target.w / 2,
+    target.tb = target.y + target.h / 2
+    const compares = this.$children.filter((_, i) => i !== index);
+
+    this.calcAndDrawLines({ target, compares });
   };
 
   /**
@@ -359,7 +409,10 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       activeDrag: null,
       layout: newLayout,
       oldDragItem: null,
-      oldLayout: null
+      oldLayout: null,
+      indices: [],
+      vLines: [],
+      hLines: []
     });
 
     this.onLayoutMaybeChanged(newLayout, oldLayout);
@@ -536,7 +589,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
    */
   processGridItem(
     child: ReactElement<any>,
-    isDroppingItem?: boolean
+    isDroppingItem?: boolean,
+    index?: number
   ): ?ReactElement<any> {
     if (!child || !child.key) return;
     const l = getLayoutItem(this.state.layout, String(child.key));
@@ -567,6 +621,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
       typeof l.isDraggable === "boolean"
         ? l.isDraggable
         : !l.static && isDraggable;
+    this.onDrag;
     const resizable =
       typeof l.isResizable === "boolean"
         ? l.isResizable
@@ -588,7 +643,7 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         handle={draggableHandle}
         onDragStop={this.onDragStop}
         onDragStart={this.onDragStart}
-        onDrag={this.onDrag}
+        onDrag={(i, x, y, e) => this.onDrag(i, x, y, e, index)}
         onResizeStart={this.onResizeStart}
         onResize={this.onResize}
         onResizeStop={this.onResizeStop}
@@ -779,14 +834,180 @@ export default class ReactGridLayout extends React.Component<Props, State> {
         onDragEnter={isDroppable ? this.onDragEnter : noop}
         onDragOver={isDroppable ? this.onDragOver : noop}
       >
-        {React.Children.map(this.props.children, child =>
-          this.processGridItem(child)
+        {React.Children.map(this.props.children, (child, index) =>
+          this.processGridItem(child, null, index)
         )}
         {isDroppable &&
           this.state.droppingDOMNode &&
           this.processGridItem(this.state.droppingDOMNode, true)}
         {this.placeholder()}
+        {this._renderGuideLine()}
       </div>
     );
   }
+
+  _renderGuideLine() {
+    const { vLines, hLines } = this.state;
+    const { lineStyle } = this.props;
+    const commonStyle = {
+      position: "absolute",
+      backgroundColor: "#1F1830",
+
+      ...lineStyle
+    };
+
+    // support react 15
+    const Container = React.Fragment || "div";
+
+    return (
+      <Container>
+        {vLines.map(({ length, value, origin }, i) => (
+          <span
+            className="v-line"
+            key={`v-${i}`}
+            style={{
+              left: value,
+              top: origin,
+              height: length,
+              width: 2,
+              ...commonStyle
+            }}
+          />
+        ))}
+        {hLines.map(({ length, value, origin }, i) => (
+          <span
+            className="h-line"
+            key={`h-${i}`}
+            style={{
+              top: value,
+              left: origin,
+              width: length,
+              height: 2,
+              ...commonStyle
+            }}
+          />
+        ))}
+      </Container>
+    );
+  }
+
+  /**
+   *
+   */
+  calcAndDrawLines({ target, compares }) {
+    const filterVL = compares.filter(({ l }) => l === target.l);
+
+    const filterVM = compares.filter(({ lr }) => lr === target.lr);
+
+    const filterVR = compares.filter(({ r }) => r === target.r || r === target.r +1); // work-arround for right side verticle line
+
+    const filterHT = compares.filter(({ t }) => t === target.t);
+
+    const filterHM = compares.filter(({ tb }) => tb === target.tb);
+
+    const filterHB = compares.filter(({ b }) => b === target.b);
+
+
+    this.setState({
+      vLines: [
+        {
+          ...this.calculateLine({
+            target,
+            array: filterVL,
+            posMin: "t",
+            posMax: "b",
+            offSet: "l"
+          })
+        },
+        {
+          ...this.calculateLine({
+            target,
+            array: filterVM,
+            posMin: "t",
+            posMax: "b",
+            offSet: "lr"
+          })
+        },
+        {
+          ...this.calculateLine({
+            target,
+            array: filterVR,
+            posMin: "t",
+            posMax: "b",
+            offSet: "r"
+          })
+        }
+      ],
+      hLines :[
+        {
+          ...this.calculateLine({
+            target,
+            array: filterHT,
+            posMin: "l",
+            posMax: "r",
+            offSet: "t"
+          })
+        },
+        {
+          ...this.calculateLine({
+            target,
+            array: filterHM,
+            posMin: "l",
+            posMax: "r",
+            offSet: "tb"
+          })
+        },
+        {
+          ...this.calculateLine({
+            target,
+            array: filterHB,
+            posMin: "l",
+            posMax: "r",
+            offSet: "b"
+          })
+        },
+      ]
+    });
+  }
+
+  calculateMinmum = ({ target, array, key }) => {
+    let result = "";
+
+    if (!array.length) return result;
+
+    array.forEach(item => {
+      if (!result) return (result = item[key]);
+
+      return (result = result <= item[key] ? result : item[key]);
+    });
+
+    result = target[key] <= result ? target[key] : result;
+
+    return result;
+  };
+
+  calculateMaximum = ({ target, array, key }) => {
+    let result = "";
+
+    if (!array.length) return result;
+
+    array.forEach(item => {
+      if (!result) return (result = item[key]);
+
+      return (result = result > item[key] ? result : item[key]);
+    });
+
+    result = target[key] > result ? target[key] : result;
+
+    return result;
+  };
+
+  calculateLine = ({ target, array, posMin, posMax, offSet }) => {
+    const origin = this.calculateMinmum({ target, array, key: posMin });
+    const length =
+      this.calculateMaximum({ target, array, key: posMax }) - origin;
+    const value = target[offSet];
+
+    return { value, length, origin };
+  };
 }

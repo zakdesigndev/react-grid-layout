@@ -657,7 +657,11 @@ export default class GridItem extends React.Component<Props, State> {
         ...this.props.style,
         ...child.props.style,
         ...this.createStyle(pos)
-      }
+      },
+      "data-x":pos.left,
+      "data-y": pos.top,
+      "data-w":pos.width,
+      "data-h":pos.height
     });
 
     // Resizable support. This is usually on but the user can toggle it off.
