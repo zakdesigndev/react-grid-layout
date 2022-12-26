@@ -265,10 +265,10 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     this.$children = this.props.children.map((child, i) => {
       const $ = this.props.innerRef.current.childNodes[i];
-      const x = Number($.getAttribute("data-x"));
-      const y = Number($.getAttribute("data-y"));
-      const w = Number($.getAttribute("data-w"))//$.clientWidth;
-      const h =  Number($.getAttribute("data-h"))//$.clientHeight;
+      const x = Number($?.getAttribute("data-x"));
+      const y = Number($?.getAttribute("data-y"));
+      const w = Number($?.getAttribute("data-w"))//$.clientWidth;
+      const h =  Number($?.getAttribute("data-h"))//$.clientHeight;
 
       return {
         $,
@@ -347,8 +347,8 @@ export default class ReactGridLayout extends React.Component<Props, State> {
 
     const target = this.$children[index];
 
-    const eleX = Number(element.getAttribute("data-x"));
-    const eleY = Number(element.getAttribute("data-y"));
+    const eleX = Number(element?.getAttribute("data-x"));
+    const eleY = Number(element?.getAttribute("data-y"));
     target.x = eleX,
     target.y = eleY,
     target.l = eleX;
