@@ -93,10 +93,10 @@ var ReactGridLayout = /*#__PURE__*/function (_React$Component) {
       });
       _this.$children = _this.props.children.map(function (child, i) {
         var $ = _this.props.innerRef.current.childNodes[i];
-        var x = Number($.getAttribute("data-x"));
-        var y = Number($.getAttribute("data-y"));
-        var w = Number($.getAttribute("data-w")); //$.clientWidth;
-        var h = Number($.getAttribute("data-h")); //$.clientHeight;
+        var x = Number($ === null || $ === void 0 ? void 0 : $.getAttribute("data-x"));
+        var y = Number($ === null || $ === void 0 ? void 0 : $.getAttribute("data-y"));
+        var w = Number($ === null || $ === void 0 ? void 0 : $.getAttribute("data-w")); //$.clientWidth;
+        var h = Number($ === null || $ === void 0 ? void 0 : $.getAttribute("data-h")); //$.clientHeight;
 
         return {
           $: $,
@@ -147,8 +147,8 @@ var ReactGridLayout = /*#__PURE__*/function (_React$Component) {
       });
       var element = _this.props.innerRef.current.querySelectorAll(".react-grid-placeholder")[0];
       var target = _this.$children[index];
-      var eleX = Number(element.getAttribute("data-x"));
-      var eleY = Number(element.getAttribute("data-y"));
+      var eleX = Number(element === null || element === void 0 ? void 0 : element.getAttribute("data-x"));
+      var eleY = Number(element === null || element === void 0 ? void 0 : element.getAttribute("data-y"));
       target.x = eleX, target.y = eleY, target.l = eleX;
       target.t = eleY;
       target.r = target.l + target.w, target.b = target.t + target.h, target.lr = target.x + target.w / 2, target.tb = target.y + target.h / 2;
