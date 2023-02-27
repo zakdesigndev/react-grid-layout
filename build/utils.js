@@ -163,9 +163,10 @@ function collides(l1 /*: LayoutItem*/, l2 /*: LayoutItem*/) /*: boolean*/{
  * @param  {Array} layout Layout.
  * @param  {Boolean} verticalCompact Whether or not to compact the layout
  *   vertically.
+ * @param  {Boolean} allowOverlap When `true`, allows overlapping grid items.
  * @return {Array}       Compacted Layout.
  */
-function compact(layout /*: Layout*/, compactType /*: CompactType*/, cols /*: number*/) /*: Layout*/{
+function compact(layout /*: Layout*/, compactType /*: CompactType*/, cols /*: number*/, allowOverlap /*: ?boolean*/) /*: Layout*/{
   // Statics go in the compareWith array right away so items flow around them.
   var compareWith = getStatics(layout);
   // We go through the items by row and column.
@@ -177,7 +178,7 @@ function compact(layout /*: Layout*/, compactType /*: CompactType*/, cols /*: nu
 
     // Don't move static elements
     if (!l.static) {
-      l = compactItem(compareWith, l, compactType, cols, sorted);
+      l = compactItem(compareWith, l, compactType, cols, sorted, allowOverlap);
 
       // Add to comparison array. We only collide with items before this one.
       // Statics are already in this array.
@@ -228,7 +229,7 @@ function resolveCompactionCollision(layout /*: Layout*/, item /*: LayoutItem*/, 
  * Modifies item.
  *
  */
-function compactItem(compareWith /*: Layout*/, l /*: LayoutItem*/, compactType /*: CompactType*/, cols /*: number*/, fullLayout /*: Layout*/) /*: LayoutItem*/{
+function compactItem(compareWith /*: Layout*/, l /*: LayoutItem*/, compactType /*: CompactType*/, cols /*: number*/, fullLayout /*: Layout*/, allowOverlap /*: ?boolean*/) /*: LayoutItem*/{
   var compactV = compactType === "vertical";
   var compactH = compactType === "horizontal";
   if (compactV) {
@@ -249,7 +250,8 @@ function compactItem(compareWith /*: Layout*/, l /*: LayoutItem*/, compactType /
 
   // Move it down, and keep moving it down if it's colliding.
   var collides;
-  while ((collides = getFirstCollision(compareWith, l)) && compactType) {
+  // Checking the compactType null value to avoid breaking the layout when overlapping is allowed.
+  while ((collides = getFirstCollision(compareWith, l)) && !(compactType === null && allowOverlap)) {
     if (compactH) {
       resolveCompactionCollision(fullLayout, l, collides.x + collides.w, "x");
     } else {
@@ -259,6 +261,10 @@ function compactItem(compareWith /*: Layout*/, l /*: LayoutItem*/, compactType /
     if (compactH && l.x + l.w > cols) {
       l.x = cols - l.w;
       l.y++;
+      // ALso move element as left as we can
+      while (l.x > 0 && !getFirstCollision(compareWith, l)) {
+        l.x--;
+      }
     }
   }
 

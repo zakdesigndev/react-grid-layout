@@ -379,7 +379,7 @@ var ReactGridLayout = /*#__PURE__*/function (_React$Component) {
       var layout = _this.state.layout;
       var newLayout = (0, _utils.compact)(layout.filter(function (l) {
         return l.i !== droppingItem.i;
-      }), (0, _utils.compactType)(_this.props), cols);
+      }), (0, _utils.compactType)(_this.props), cols, _this.props.allowOverlap);
       _this.setState({
         layout: newLayout,
         droppingDOMNode: null,
