@@ -249,7 +249,7 @@ function compactItem(compareWith /*: Layout*/, l /*: LayoutItem*/, compactType /
 
   // Move it down, and keep moving it down if it's colliding.
   var collides;
-  while (collides = getFirstCollision(compareWith, l)) {
+  while ((collides = getFirstCollision(compareWith, l)) && compactType) {
     if (compactH) {
       resolveCompactionCollision(fullLayout, l, collides.x + collides.w, "x");
     } else {
