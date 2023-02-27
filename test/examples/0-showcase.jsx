@@ -76,7 +76,7 @@ export default class ShowcaseLayout extends React.Component<Props, State> {
   };
 
   onLayoutChange: OnLayoutChangeCallback = (layout, layouts) => {
-    this.props.onLayoutChange(layout, layouts);
+    this.props.onLayoutChange(layout, layouts);    
   };
 
   onNewLayout: EventHandler = () => {
@@ -105,6 +105,17 @@ export default class ShowcaseLayout extends React.Component<Props, State> {
         <button onClick={this.onCompactTypeChange}>
           Change Compaction Type
         </button>
+        <div
+          className="droppable-element"
+          draggable={true}
+          // this is a hack for firefox
+          // Firefox requires some kind of initialization
+          // which we can do by adding this attribute
+          // @see https://bugzilla.mozilla.org/show_bug.cgi?id=568313
+          onDragStart={e => e.dataTransfer.setData("text/plain", "")}
+        >
+          Droppable Element (Drag me!)
+        </div>
         <ResponsiveReactGridLayout
           {...this.props}
           layouts={this.state.layouts}
@@ -118,6 +129,9 @@ export default class ShowcaseLayout extends React.Component<Props, State> {
           useCSSTransforms={this.state.mounted}
           compactType={this.state.compactType}
           preventCollision={!this.state.compactType}
+          isDroppable={true}
+          allowOverlap={true}
+
         >
           {this.generateDOM()}
         </ResponsiveReactGridLayout>
